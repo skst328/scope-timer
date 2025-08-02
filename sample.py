@@ -4,10 +4,12 @@ from scope_timer import ScopeTimer
 
 # 測定対象の関数その1
 def func1(x, n_iter):
-    ScopeTimer.begin('func1')
     for i in range(n_iter):
+        ScopeTimer.begin('func1')
         x += 1
-    ScopeTimer.end('func1')
+        x /= 10
+        x *= 2
+        ScopeTimer.end('func1')
 
 
 # 測定対象の関数その2
@@ -25,9 +27,10 @@ def func2(x, n_iter):
 
 
 x = np.arange(100000, dtype='f4')
-with ScopeTimer.profile('Scope1'):
-    func1(x, 10000)
-    func2(x, 10000)
+for _ in range(3):
+    with ScopeTimer.profile('Scope1'):
+        func1(x, 5000)
+        func2(x, 10000)
 
 
 with ScopeTimer.profile('Scope2'):
@@ -36,7 +39,8 @@ with ScopeTimer.profile('Scope2'):
 
 
 # 標準出力
-ScopeTimer.summarize(verbose=False, precision=6)
+ScopeTimer.summarize(verbose=True, precision=8, divider="rule")
 
 # ファイル出力
-ScopeTimer.write('timer.log', verbose=True, precision=6)
+ScopeTimer.save_txt('timer.log', precision=3)
+ScopeTimer.save_html('timer.html', precision=3)
