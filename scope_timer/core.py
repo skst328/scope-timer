@@ -19,6 +19,15 @@ class ScopeTimer:
 
     @staticmethod
     def begin(name: str):
+        """Starts a new or existing timer scope.
+
+        Must be paired with a corresponding `end()` call. Scopes can be nested,
+        which creates a parent-child relationship.
+
+        Args:
+            name (str): The name to identify the scope.
+        """
+
         tlocal = ScopeTimer._local
 
         active_node = tlocal.active_node
@@ -35,6 +44,19 @@ class ScopeTimer:
 
     @staticmethod
     def end(name: str):
+        """Ends the currently active timer scope.
+
+        Must correctly correspond to the scope started with `begin()`.
+
+        Args:
+            name (str): The name of the scope to end. Must match the name
+                of the currently active scope.
+
+        Raises:
+            ValueError: If `end()` is called without a matching `begin()` or if
+                the scope name does not match.
+        """
+
         tlocal = ScopeTimer._local
 
         active_node = tlocal.active_node
@@ -56,6 +78,19 @@ class ScopeTimer:
     @staticmethod
     @contextmanager
     def profile(name: str):
+        """Profiles a block of code as a context manager.
+
+        This is the recommended and safest way to use the timer, as it
+        automatically handles `begin()` and `end()` calls, even if
+        exceptions occur.
+
+        Args:
+            name (str): The name of the scope to profile.
+
+        Yields:
+            None
+        """
+
         ScopeTimer.begin(name)
         try:
             yield
@@ -64,6 +99,11 @@ class ScopeTimer:
 
     @staticmethod
     def reset():
+        """Resets all recorded timer information.
+
+        Use this to start a fresh set of measurements within the same process.
+        """
+
         ScopeTimer._local.reset()
 
     @staticmethod
@@ -115,7 +155,7 @@ class ScopeTimer:
 
         items.extend(tree_list)
 
-        if len(warn_list) < len(tlocal.root_nodes):
+        if overall_time > 0:
             footer = Text(f"overall_time: {time_property.format_time(overall_time)}", style="bright_red")
         else:
             footer = Text("overall_time: N/A (no completed root scopes)", style="bright_red")
@@ -152,6 +192,19 @@ class ScopeTimer:
         divider: Literal["rule", "blank"] = "rule",
         verbose: bool = False
     ):
+        """Prints a formatted summary of timing results to the console.
+
+        Args:
+            time_unit (str, optional): The display unit for time ('auto', 's',
+                'ms', 'us'). Defaults to 'auto'.
+            precision (int or str, optional): The display precision for time
+                (number of decimal places). Defaults to 'auto'.
+            divider (str, optional): The style of the divider between root
+                scopes ('rule', 'blank'). Defaults to 'rule'.
+            verbose (bool, optional): If True, displays detailed statistics
+                (min, max, avg, var). Defaults to False.
+        """
+
         ScopeTimer._preprocess(time_unit, precision)
         group = ScopeTimer._create_rich_group(
             verbose=verbose, divider=divider)
@@ -165,6 +218,18 @@ class ScopeTimer:
         precision: Union[int, Literal["auto"]] = "auto",
         verbose: bool = False
     ):
+        """Saves a summary of timing results as a plain text file.
+
+        Args:
+            file_path (str or Path): The path to the output file.
+            time_unit (str, optional): The display unit for time.
+                Defaults to 'auto'.
+            precision (int or str, optional): The display precision for time.
+                Defaults to 'auto'.
+            verbose (bool, optional): If True, includes detailed statistics.
+                Defaults to False.
+        """
+
         ScopeTimer._preprocess(time_unit, precision)
         path = Path(file_path)
         group = ScopeTimer._create_rich_group(
@@ -181,6 +246,18 @@ class ScopeTimer:
         precision: Union[int, Literal["auto"]] = "auto",
         verbose: bool = False
     ):
+        """Saves a summary of timing results as an HTML file.
+
+        Args:
+            file_path (str or Path): The path to the output file.
+            time_unit (str, optional): The display unit for time.
+                Defaults to 'auto'.
+            precision (int or str, optional): The display precision for time.
+                Defaults to 'auto'.
+            verbose (bool, optional): If True, includes detailed statistics.
+                Defaults to False.
+        """
+
         ScopeTimer._preprocess(time_unit, precision)
         path = Path(file_path)
         group = ScopeTimer._create_rich_group(

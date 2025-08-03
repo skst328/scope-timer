@@ -155,13 +155,19 @@ class TimerNode:
         return open_nodes
 
     def _get_total_time(self) -> float:
-        return sum(r.elapsed for r in self.records)
+        if self.ncall == 0:
+            return 0.
+        return sum(r.elapsed for r in self.records[:self.ncall])
 
     def _get_min_time(self) -> float:
-        return min(r.elapsed for r in self.records)
+        if self.ncall == 0:
+            return 0.
+        return min(r.elapsed for r in self.records[:self.ncall])
 
     def _get_max_time(self) -> float:
-        return max(r.elapsed for r in self.records)
+        if self.ncall == 0:
+            return 0.
+        return max(r.elapsed for r in self.records[:self.ncall])
 
     def _get_avg_time(self) -> float:
         if self.ncall == 0:
@@ -169,10 +175,10 @@ class TimerNode:
         return self._get_total_time() / self.ncall
 
     def _get_var_time(self) -> float:
-        if self.ncall == 0:
+        if self.ncall < 2:
             return 0.
         avg = self._get_avg_time()
-        return sum((r.elapsed - avg) ** 2 for r in self.records) / self.ncall
+        return sum((r.elapsed - avg) ** 2 for r in self.records[:self.ncall]) / self.ncall
 
     @property
     def total_time(self) -> float:

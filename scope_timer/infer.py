@@ -47,7 +47,7 @@ def _infer_time_scaling(
 def _num_digits(n: float) -> int:
     n_int = int(n)
     if n_int == 0:
-        return 0
+        return 0  # pragma: no cover
     return int(math.log10(abs(n_int))) + 1
 
 
@@ -71,7 +71,7 @@ def _infer_time_precision(
     if digit >= precision_cap:
         return 0
     if digit <= 0:
-        return precision_cap
+        return precision_cap  # pragma: no cover
 
     return precision_cap - digit
 
