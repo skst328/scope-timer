@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scope-timer"
-version = "0.1.0"
+version = "0.1.1"
 description = "A lightweight profiler to measure execution time with a rich and colorful hierarchical report."
 readme = "README.md"
 requires-python = ">=3.10"

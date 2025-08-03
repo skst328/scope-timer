@@ -69,7 +69,7 @@ ScopeTimer.save_html("timer_report.html")
 The following console output shows a structured report with elapsed time, number of calls, and percentage of parent scope.
 
 <p align="center">
-  <img src="images/screenshot.png" alt="ScopeTimer Console Output" width="400">
+  <img src="https://raw.githubusercontent.com/skst328/scope-timer/main/images/screenshot.png" alt="ScopeTimer Console Output" width="400">
 </p>
 
 ## Limitations
@@ -90,7 +90,7 @@ Support for async contexts (e.g., `contextvars`) may be considered in a future r
 `scope-timer` is designed to be lightweight with predictable performance.
 The following graphs show the memory usage and report generation time when profiling a realistic, multi-stage pipeline.
 
-<p align="center"> <img src="images/scope_timer_performance.png" alt="ScopeTimer Performance Graph" width="90%"> </p>
+<p align="center"> <img src="https://raw.githubusercontent.com/skst328/scope-timer/main/images/scope_timer_performance.png" alt="ScopeTimer Performance Graph" width="90%"> </p>
 
 This benchmark simulates a typical pipeline structure consisting of the following:
 
