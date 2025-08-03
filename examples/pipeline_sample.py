@@ -38,6 +38,3 @@ def main():
 if __name__ == "__main__":
     main()
     ScopeTimer.summarize()
-    main()
-    ScopeTimer.summarize(verbose=True)
-
