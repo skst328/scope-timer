@@ -1,4 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![CI](https://github.com/skst328/scope-timer/actions/workflows/ci.yml/badge.svg)
+
 
 # scope-timer
 
