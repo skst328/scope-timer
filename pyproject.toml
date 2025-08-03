@@ -15,13 +15,10 @@ authors = [
     { name = "skst328" },
 ]
 
-[project.optional-dependencies]
-test = [
-    "pytest>=8.0.0",
-    "pytest-cov>=6.0.0",
+dependencies = [
+    "rich>=13.0.0",
 ]
 
-# classifiersを更新
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -35,8 +32,10 @@ classifiers = [
     "Topic :: System :: Benchmark",
 ]
 
-dependencies = [
-    "rich>=13.0.0",
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
 ]
 
 [project.urls]
