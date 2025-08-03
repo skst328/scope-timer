@@ -39,8 +39,8 @@ with ScopeTimer.profile('Scope2'):
 
 
 # 標準出力
-ScopeTimer.summarize(verbose=True, precision=8, divider="rule")
+ScopeTimer.summarize(verbose=True, divider="rule")
 
 # ファイル出力
-ScopeTimer.save_txt('timer.log', precision=3)
-ScopeTimer.save_html('timer.html', precision=3)
+ScopeTimer.save_txt('timer.log')
+ScopeTimer.save_html('timer.html')

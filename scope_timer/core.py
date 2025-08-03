@@ -1,207 +1,17 @@
 import io
-import time
-import threading
-from typing import Optional, Union, Literal
-from dataclasses import dataclass
+from typing import Union, Literal
 from contextlib import contextmanager
 from pathlib import Path
 
 from rich.text import Text
-from rich.tree import Tree
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.console import Console, Group
 
+from scope_timer.node import TimerNode
+from scope_timer.thread_local import TimerThreadLocal
+from scope_timer.infer import infer_time_property
 
-@dataclass(slots=True)
-class TimerRecord:
-    begin: float = 0.
-    end: Optional[float] = None
-
-    @property
-    def elapsed(self) -> float:
-        if self.end is None:
-            return 0.
-        return self.end - self.begin
-
-
-@dataclass(slots=True, frozen=True)
-class TimerStats:
-    total: float
-    min_: float
-    max_: float
-    avg: float
-    var_: float
-
-
-class TimerNode:
-    name: str
-    records: list[TimerRecord]
-    level: int
-    branch_nodes: dict[str, "TimerNode"]
-    parent: Optional["TimerNode"]
-    ncall: int
-    is_root: bool
-    stats: Optional[TimerStats]
-    preprocessed: bool
-
-    __slots__ = [
-        "name",
-        "records",
-        "level",
-        "branch_nodes",
-        "parent",
-        "ncall",
-        "is_root",
-        "stats",
-        "preprocessed"
-    ]
-
-    def __init__(
-        self,
-        name: str,
-        level: int = 0,
-        parent: Optional["TimerNode"] = None,
-    ):
-        self.name = name
-        self.records = []
-        self.level = level
-        self.branch_nodes = {}
-        self.parent = parent
-        self.ncall = 0
-        self.is_root = True if level == 0 else False
-        self.stats = None
-        self.preprocessed = False
-
-    def begin_record(self):
-        self.records.append(
-            TimerRecord(begin=time.perf_counter())
-        )
-
-    def end_record(self):
-        self.records[self.ncall].end = time.perf_counter()
-        self.ncall += 1
-
-    def get_or_create_branch(self, name: str) -> "TimerNode":
-        branch = self.branch_nodes.get(name)
-        if branch is None:
-            branch = TimerNode(name, level=self.level+1, parent=self)
-            self.branch_nodes[name] = branch
-        return branch
-
-    def render_label(self, precision: int, verbose: bool = False):
-        label = Text()
-        label.append(f"[{self.name}]", style="bright_green")
-        label.append(f" {self.total_time:.{precision}f}sec / {self.ncall}x")
-
-        if verbose:
-            label.append(" (")
-            label.append(f"min={self.min_time:.{precision}f}, ")
-            label.append(f"max={self.max_time:.{precision}f}, ")
-            label.append(f"avg={self.avg_time:.{precision}f}, ")
-            label.append(f"var={self.var_time:.{precision}f}")
-            label.append(")")
-        return label
-
-    def to_tree(self, precision: int, verbose: bool = False) -> Tree:
-        tree = Tree(
-            self.render_label(precision, verbose=verbose),
-            guide_style="bright_blue"
-        )
-        for branch_node in self.branch_nodes.values():
-            tree.add(branch_node.to_tree(precision, verbose=verbose))
-        return tree
-
-    def has_open_record(self) -> bool:
-        return self.ncall < len(self.records)
-
-    def get_open_nodes(self) -> list["TimerNode"]:
-        open_nodes: list["TimerNode"] = []
-
-        if self.has_open_record():
-            open_nodes.append(self)
-
-        for branch_node in self.branch_nodes.values():
-            open_nodes.extend(branch_node.get_open_nodes())
-        return open_nodes
-
-    def _get_total_time(self) -> float:
-        return sum(r.elapsed for r in self.records)
-
-    def _get_min_time(self) -> float:
-        return min(r.elapsed for r in self.records)
-
-    def _get_max_time(self) -> float:
-        return max(r.elapsed for r in self.records)
-
-    def _get_avg_time(self) -> float:
-        if self.ncall == 0:
-            return 0.
-        return self._get_total_time() / self.ncall
-
-    def _get_var_time(self) -> float:
-        if self.ncall == 0:
-            return 0.
-        avg = self._get_avg_time()
-        return sum((r.elapsed - avg) ** 2 for r in self.records) / self.ncall
-
-    @property
-    def total_time(self) -> float:
-        if self.stats is None:
-            return self._get_total_time()
-        return self.stats.total
-
-    @property
-    def min_time(self) -> float:
-        if self.stats is None:
-            return self._get_min_time()
-        return self.stats.min_
-
-    @property
-    def max_time(self) -> float:
-        if self.stats is None:
-            return self._get_max_time()
-        return self.stats.max_
-
-    @property
-    def avg_time(self) -> float:
-        if self.stats is None:
-            return self._get_avg_time()
-        return self.stats.avg
-
-    @property
-    def var_time(self) -> float:
-        if self.stats is None:
-            return self._get_var_time()
-        return self.stats.var_
-
-    def _build_stats(self):
-        self.stats = TimerStats(
-            total=self._get_total_time(),
-            min_=self._get_min_time(),
-            max_=self._get_max_time(),
-            avg=self._get_avg_time(),
-            var_=self._get_var_time()
-        )
-
-    def build_stats_recursive(self):
-        self._build_stats()
-        for branch_node in self.branch_nodes.values():
-            branch_node.build_stats_recursive()
-        self.preprocessed = True
-
-
-class TimerThreadLocal(threading.local):
-    active_node: Optional[TimerNode]
-    root_nodes: dict[str, TimerNode]
-
-    def __init__(self):
-        self.active_node = None
-        self.root_nodes = {}
-
-    def reset(self):
-        self.active_node = None
-        self.root_nodes.clear()
 
 
 class ScopeTimer:
@@ -259,11 +69,14 @@ class ScopeTimer:
     @staticmethod
     def _create_rich_group(
             verbose: bool = False,
-            precision: int = 4,
             divider: Literal["rule", "blank"] = "blank"
     ):
         tlocal = ScopeTimer._local
         overall_time: float = 0.
+
+        time_property = tlocal.time_property
+        if time_property is None:
+            raise RuntimeError
 
         items = []
 
@@ -273,7 +86,7 @@ class ScopeTimer:
         tree_list = []
         warn_list: list[Text] = []
         for root_node in tlocal.root_nodes.values():
-            tree = root_node.to_tree(precision, verbose=verbose)
+            tree = root_node.to_tree(time_property, verbose=verbose)
             tree_list.append(tree)
             if divider == "rule":
                 tree_list.append(Rule(style="grey50"))
@@ -302,42 +115,60 @@ class ScopeTimer:
 
         items.extend(tree_list)
 
-        footer = Text(f"overall_time: {overall_time:.{precision}f} sec", style="bright_red")
+        if len(warn_list) < len(tlocal.root_nodes):
+            footer = Text(f"overall_time: {time_property.format_time(overall_time)}", style="bright_red")
+        else:
+            footer = Text("overall_time: N/A (no completed root scopes)", style="bright_red")
         items.append(footer)
 
         group = Group(*items)
         return group
 
     @staticmethod
-    def _preprocess():
+    def _preprocess(
+        time_unit: Literal["auto", "s", "ms", "us"],
+        precision: Union[int, Literal["auto"]]
+    ):
         tlocal = ScopeTimer._local
+
+        worst_time: float = 0.
         for root_node in tlocal.root_nodes.values():
-            if root_node.preprocessed is False:
+            if not root_node.preprocessed:
                 root_node.build_stats_recursive()
+
+            if root_node.total_time > worst_time:
+                worst_time = root_node.total_time
+
+        tlocal.time_property = infer_time_property(
+            worst_time,
+            time_unit,
+            precision
+        )
 
     @staticmethod
     def summarize(
-        precision: Union[int, Literal["auto"]] = "auto",
         time_unit: Literal["auto", "s", "ms", "us"] = "auto",
+        precision: Union[int, Literal["auto"]] = "auto",
         divider: Literal["rule", "blank"] = "rule",
         verbose: bool = False
     ):
-        ScopeTimer._preprocess()
+        ScopeTimer._preprocess(time_unit, precision)
         group = ScopeTimer._create_rich_group(
-            verbose=verbose, precision=precision, divider=divider)
+            verbose=verbose, divider=divider)
         console = Console()
         console.print(group)
 
     @staticmethod
     def save_txt(
         file_path: Union[str, Path],
-        precision: int = 4,
+        time_unit: Literal["auto", "s", "ms", "us"] = "auto",
+        precision: Union[int, Literal["auto"]] = "auto",
         verbose: bool = False
     ):
-        ScopeTimer._preprocess()
+        ScopeTimer._preprocess(time_unit, precision)
         path = Path(file_path)
         group = ScopeTimer._create_rich_group(
-            verbose=verbose, precision=precision, divider="blank")
+            verbose=verbose, divider="blank")
 
         with path.open("w", encoding="utf-8") as f:
             console = Console(file=f, color_system=None, force_terminal=False)
@@ -346,13 +177,14 @@ class ScopeTimer:
     @staticmethod
     def save_html(
         file_path: Union[str, Path],
-        precision: int=4,
+        time_unit: Literal["auto", "s", "ms", "us"] = "auto",
+        precision: Union[int, Literal["auto"]] = "auto",
         verbose: bool = False
     ):
-        ScopeTimer._preprocess()
+        ScopeTimer._preprocess(time_unit, precision)
         path = Path(file_path)
         group = ScopeTimer._create_rich_group(
-            verbose=verbose, precision=precision, divider="blank")
+            verbose=verbose, divider="blank")
 
         sink = io.StringIO()
         console = Console(record=True, file=sink)
