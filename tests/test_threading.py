@@ -8,11 +8,6 @@ from scope_timer.node import TimerNode
 # Tolerance for time.sleep() inaccuracy (15%)
 TOLERANCE = 0.15
 
-@pytest.fixture(autouse=True)
-def reset_timer():
-    """Reset the timer before each test to ensure isolation."""
-    ScopeTimer.reset()
-    yield
 
 def worker(
     thread_id: int,

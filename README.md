@@ -170,6 +170,13 @@ All methods are static and can be called directly from the `ScopeTimer` class.
 
   Resets all recorded timer data, clearing all scopes and measurements. Use this to start a fresh set of measurements within the same process.
 
+* `ScopeTimer.enable()`
+
+  Enables the timer globally. If the timer was disabled, this will resume profiling. The timer is enabled by default.
+
+* `ScopeTimer.disable()`
+
+  Disables the timer globally. While disabled, all profiling calls (`profile`, `begin`, `end`) are ignored and have no performance impact.
 
 ## License
 

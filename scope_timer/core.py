@@ -2,6 +2,7 @@ import io
 from typing import Union, Literal
 from contextlib import contextmanager
 from pathlib import Path
+from threading import Lock
 
 from rich.text import Text
 from rich.panel import Panel
@@ -13,9 +14,35 @@ from scope_timer.thread_local import TimerThreadLocal
 from scope_timer.infer import infer_time_property
 
 
-
 class ScopeTimer:
     _local: TimerThreadLocal = TimerThreadLocal()
+    _lock: Lock = Lock()
+    _enabled: bool = True
+
+    @staticmethod
+    def disable():
+        """Disables the timer globally.
+
+        When the timer is disabled, all profiling calls (e.g., `profile()`,
+        `begin()`, `end()`) are ignored and have no performance impact. This
+        allows you to dynamically turn off profiling in your application
+        without removing the timer code.
+        """
+
+        with ScopeTimer._lock:
+            ScopeTimer._enabled = False
+
+    @staticmethod
+    def enable():
+        """Enables the timer globally, resuming profiling.
+
+        If the timer was previously disabled with `disable()`, this method
+        will reactivate it. The timer is enabled by default when an application
+        starts.
+        """
+
+        with ScopeTimer._lock:
+            ScopeTimer._enabled = True
 
     @staticmethod
     def begin(name: str):
@@ -27,6 +54,8 @@ class ScopeTimer:
         Args:
             name (str): The name to identify the scope.
         """
+        if not ScopeTimer._enabled:
+            return
 
         tlocal = ScopeTimer._local
 
@@ -56,6 +85,8 @@ class ScopeTimer:
             ValueError: If `end()` is called without a matching `begin()` or if
                 the scope name does not match.
         """
+        if not ScopeTimer._enabled:
+            return
 
         tlocal = ScopeTimer._local
 

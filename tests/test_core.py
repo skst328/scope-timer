@@ -6,11 +6,6 @@ from scope_timer import ScopeTimer
 # Tolerance for time.sleep() inaccuracy, set to 10%
 TOLERANCE = 0.1
 
-@pytest.fixture(autouse=True)
-def reset_timer():
-    """Reset the timer before each test to ensure isolation."""
-    ScopeTimer.reset()
-    yield
 
 def test_simple_profile():
     """Checks that basic profiling works within a tolerance."""
@@ -162,3 +157,58 @@ def test_summarize_unfinished_warning_with_blank_divider(capsys):
     # Just checking that it runs without error and produces a warning is enough
     assert "WARNING" in captured.out
     assert "unclosed scope: 'unfinished_blank'" in captured.out
+
+def test_disable_prevents_profiling():
+    """Checks that disable() prevents any new scopes from being recorded."""
+    # Profile something while enabled
+    with ScopeTimer.profile("should_exist"):
+        pass
+    assert "should_exist" in ScopeTimer._local.root_nodes
+
+    # Disable the timer
+    ScopeTimer.disable()
+
+    # Attempt to profile while disabled
+    with ScopeTimer.profile("should_not_exist"):
+        time.sleep(0.01)
+
+    ScopeTimer.begin("also_should_not_exist")
+
+    # Verify that no new scopes were created after disabling
+    assert "should_not_exist" not in ScopeTimer._local.root_nodes
+    assert "also_should_not_exist" not in ScopeTimer._local.root_nodes
+    assert len(ScopeTimer._local.root_nodes) == 1
+
+def test_enable_resumes_profiling():
+    """Checks that enable() correctly resumes profiling after being disabled."""
+    # Disable, attempt to profile, then re-enable
+    ScopeTimer.disable()
+    with ScopeTimer.profile("disabled_scope"):
+        pass
+
+    ScopeTimer.enable()
+    with ScopeTimer.profile("enabled_scope"):
+        pass
+
+    # Verify that only the scope created after enabling was recorded
+    assert "disabled_scope" not in ScopeTimer._local.root_nodes
+    assert "enabled_scope" in ScopeTimer._local.root_nodes
+
+def test_disabled_begin_end_are_noop():
+    """
+    Checks that begin() and end() calls do nothing and raise no errors
+    when the timer is disabled.
+    """
+    ScopeTimer.disable()
+
+    # These calls should be no-ops
+    ScopeTimer.begin("A")
+    # Normally, calling end() with the wrong name would raise a ValueError
+    ScopeTimer.end("B")
+
+    # Also, calling end() without a matching begin() should not raise an error
+    ScopeTimer.end("C")
+
+    # Verify that no state was changed
+    assert not ScopeTimer._local.root_nodes
+    assert ScopeTimer._local.active_node is None

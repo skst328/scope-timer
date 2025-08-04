@@ -36,5 +36,15 @@ def main():
         run_pipeline()
 
 if __name__ == "__main__":
+    ScopeTimer.disable()
+    main()
+    ScopeTimer.summarize()
+
+    ScopeTimer.enable()
+    main()
+    ScopeTimer.summarize()
+
+    ScopeTimer.reset()
+    ScopeTimer.disable()
     main()
     ScopeTimer.summarize()
