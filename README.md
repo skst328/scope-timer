@@ -58,7 +58,7 @@ with ScopeTimer.profile("pipeline"):
     postprocess()
 
 # Print the summary to the console
-ScopeTimer.summarize(verbose=True)
+ScopeTimer.summarize()
 
 # You can also save the report to a file
 ScopeTimer.save_html("timer_report.html")
@@ -83,7 +83,6 @@ This is because timer state is tracked **per thread**, but `asyncio` runs multip
 
 > For now, `scope-timer` is intended for synchronous or multi-threaded code only.
 
-Support for async contexts (e.g., `contextvars`) may be considered in a future release.
 
 ## Performance
 
