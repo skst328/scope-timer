@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "scope-timer"
-version = "0.1.1"
+dynamic = ["version"]
 description = "A lightweight profiler to measure execution time with a rich and colorful hierarchical report."
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { text = "MIT License" }
 keywords = ["profiler", "timer", "performance", "timing", "scope", "rich"]
@@ -31,6 +31,13 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Benchmark",
 ]
+
+[tool.hatch.version]
+source = "code"
+path = "scope_timer/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["scope_timer"]
 
 [project.optional-dependencies]
 test = [

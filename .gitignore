@@ -208,3 +208,6 @@ __marimo__/
 
 *.html
 *.txt
+*.csv
+*.png
+!images/*.png

@@ -70,11 +70,12 @@ def main():
     summarize_time_list = []
 
     # Scale the number of pipeline runs
-    for n_iterations in range(10, 1001, 50):
+    for n_iterations in range(10, 10001, 200):
         mem_after, summarize_time = run_and_measure_pipeline(n_iterations)
         iterations_list.append(n_iterations)
         mem_after_list.append(mem_after)
         summarize_time_list.append(summarize_time)
+        print(f"{n_iterations=}, {mem_after=}, {summarize_time=}")
 
     print("Generating plot...")
     # --- Plotting with xkcd style ---
