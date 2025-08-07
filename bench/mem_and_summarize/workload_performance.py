@@ -23,26 +23,26 @@ def run_and_measure_pipeline(n_iterations, n_predictions=20):
 
     # Run the pipeline simulation n_iterations times
     for _ in range(n_iterations):
-        with ScopeTimer.profile("pipeline_run"):
+        with ScopeTimer.profile_block("pipeline_run"):
             # Stage 1: Preprocess (2 sub-scopes)
-            with ScopeTimer.profile("preprocess"):
-                with ScopeTimer.profile("load_data"):
+            with ScopeTimer.profile_block("preprocess"):
+                with ScopeTimer.profile_block("load_data"):
                     pass
-                with ScopeTimer.profile("clean_data"):
+                with ScopeTimer.profile_block("clean_data"):
                     pass
 
             # Stage 2: Compute (includes a loop for sub-nodes)
-            with ScopeTimer.profile("compute"):
-                with ScopeTimer.profile("feature_extraction"):
+            with ScopeTimer.profile_block("compute"):
+                with ScopeTimer.profile_block("feature_extraction"):
                     pass
                 # Loop to simulate multiple low-level operations
                 for j in range(n_predictions):
-                    with ScopeTimer.profile(f"prediction_{j}"):
+                    with ScopeTimer.profile_block(f"prediction_{j}"):
                         pass
 
             # Stage 3: Postprocess (1 sub-scope)
-            with ScopeTimer.profile("postprocess"):
-                with ScopeTimer.profile("save_results"):
+            with ScopeTimer.profile_block("postprocess"):
+                with ScopeTimer.profile_block("save_results"):
                     pass
 
     # Measure execution time and final memory impact of summarize()
@@ -70,7 +70,7 @@ def main():
     summarize_time_list = []
 
     # Scale the number of pipeline runs
-    for n_iterations in range(10, 10001, 200):
+    for n_iterations in range(10, 4011, 200):
         mem_after, summarize_time = run_and_measure_pipeline(n_iterations)
         iterations_list.append(n_iterations)
         mem_after_list.append(mem_after)

@@ -2,49 +2,46 @@ from scope_timer import ScopeTimer
 import time
 
 
-@ScopeTimer.profile("preprocess")
+@ScopeTimer.profile_func("preprocess")
 def preprocess():
-    with ScopeTimer.profile("load_data"):
+    with ScopeTimer.profile_block("load_data"):
         time.sleep(0.01)
-    with ScopeTimer.profile("clean_data"):
+    with ScopeTimer.profile_block("clean_data"):
         time.sleep(0.015)
 
-@ScopeTimer.profile("compute")
+@ScopeTimer.profile_func("compute")
 def compute():
     for _ in range(10):
-        with ScopeTimer.profile("matmul"):
+        with ScopeTimer.profile_block("matmul"):
             time.sleep(0.001)
-        with ScopeTimer.profile("activation"):
+        with ScopeTimer.profile_block("activation"):
             time.sleep(0.0005)
 
-@ScopeTimer.profile("postprocess")
+@ScopeTimer.profile_func("postprocess")
 def postprocess():
-    with ScopeTimer.profile("save_results"):
+    with ScopeTimer.profile_block("save_results"):
         time.sleep(0.005)
-    with ScopeTimer.profile("log_metrics"):
+    with ScopeTimer.profile_block("log_metrics"):
         time.sleep(0.002)
 
-@ScopeTimer.profile("pipeline")
+@ScopeTimer.profile_func("pipeline")
 def run_pipeline():
     preprocess()
     compute()
     postprocess()
 
-@ScopeTimer.profile("main")
+@ScopeTimer.profile_func("main")
 def main():
     for _ in range(2):
         run_pipeline()
 
 if __name__ == "__main__":
-    ScopeTimer.disable()
-    main()
-    ScopeTimer.summarize()
-
-    ScopeTimer.enable()
     main()
     ScopeTimer.summarize()
 
     ScopeTimer.reset()
-    ScopeTimer.disable()
+    main()
+    ScopeTimer.summarize()
+
     main()
     ScopeTimer.summarize()

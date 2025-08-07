@@ -8,5 +8,4 @@ def reset_timer():
     This fixture is automatically applied to all tests.
     """
     ScopeTimer.reset()
-    ScopeTimer.enable()
     yield

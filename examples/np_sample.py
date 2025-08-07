@@ -5,35 +5,33 @@ from scope_timer import ScopeTimer
 # 測定対象の関数その1
 def func1(x, n_iter):
     for i in range(n_iter):
-        ScopeTimer.begin('func1')
-        x += 1
-        x /= 10
-        x *= 2
-        ScopeTimer.end('func1')
+        with ScopeTimer.profile_block("func1"):
+            x += 1
+            x /= 10
+            x *= 2
 
 
 # 測定対象の関数その2
-@ScopeTimer.profile('func2')
+@ScopeTimer.profile_func()
 def func2(x, n_iter):
     # 関数その2のサブ関数
     def func2_sub(x):
-        ScopeTimer.begin('func2_sub')
-        retval = 2 * x
-        ScopeTimer.end('func2_sub')
+        with ScopeTimer.profile_block("func2_sub"):
+            retval = 2 * x
         return retval
 
-    for i in range(n_iter):
+    for _ in range(n_iter):
         x += x / func2_sub(x)
 
 
 x = np.arange(100000, dtype='f4')
 for _ in range(3):
-    with ScopeTimer.profile('Scope1'):
+    with ScopeTimer.profile_block('Scope1'):
         func1(x, 5000)
         func2(x, 10000)
 
 
-with ScopeTimer.profile('Scope2'):
+with ScopeTimer.profile_block('Scope2'):
     y = np.ones(1000, dtype='f4')
     func2(y, 10000)
 

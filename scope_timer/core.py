@@ -1,8 +1,9 @@
 import io
-from typing import Union, Literal
-from contextlib import contextmanager
+import os
+from typing import Union, Literal, Optional
+from contextlib import nullcontext
 from pathlib import Path
-from threading import Lock
+from functools import wraps
 
 from rich.text import Text
 from rich.panel import Panel
@@ -14,38 +15,23 @@ from scope_timer.thread_local import TimerThreadLocal
 from scope_timer.infer import infer_time_property
 
 
+class _ProfileContext:
+    def __init__(self, name: str):
+        self.name = name
+
+    def __enter__(self):
+        ScopeTimer._begin(self.name)
+
+    def __exit__(self, *_):
+        ScopeTimer._end(self.name)
+
+
 class ScopeTimer:
     _local: TimerThreadLocal = TimerThreadLocal()
-    _lock: Lock = Lock()
-    _enabled: bool = True
+    _TIMER_ENABLE = int(os.getenv("SCOPE_TIMER_ENABLE", 1))
 
     @staticmethod
-    def disable():
-        """Disables the timer globally.
-
-        When the timer is disabled, all profiling calls (e.g., `profile()`,
-        `begin()`, `end()`) are ignored and have no performance impact. This
-        allows you to dynamically turn off profiling in your application
-        without removing the timer code.
-        """
-
-        with ScopeTimer._lock:
-            ScopeTimer._enabled = False
-
-    @staticmethod
-    def enable():
-        """Enables the timer globally, resuming profiling.
-
-        If the timer was previously disabled with `disable()`, this method
-        will reactivate it. The timer is enabled by default when an application
-        starts.
-        """
-
-        with ScopeTimer._lock:
-            ScopeTimer._enabled = True
-
-    @staticmethod
-    def begin(name: str):
+    def _begin(name: str):
         """Starts a new or existing timer scope.
 
         Must be paired with a corresponding `end()` call. Scopes can be nested,
@@ -54,8 +40,6 @@ class ScopeTimer:
         Args:
             name (str): The name to identify the scope.
         """
-        if not ScopeTimer._enabled:
-            return
 
         tlocal = ScopeTimer._local
 
@@ -72,7 +56,7 @@ class ScopeTimer:
         node.begin_record()
 
     @staticmethod
-    def end(name: str):
+    def _end(name: str):
         """Ends the currently active timer scope.
 
         Must correctly correspond to the scope started with `begin()`.
@@ -85,8 +69,6 @@ class ScopeTimer:
             ValueError: If `end()` is called without a matching `begin()` or if
                 the scope name does not match.
         """
-        if not ScopeTimer._enabled:
-            return
 
         tlocal = ScopeTimer._local
 
@@ -107,8 +89,7 @@ class ScopeTimer:
         tlocal.active_node = None if active_node.is_root else active_node.parent
 
     @staticmethod
-    @contextmanager
-    def profile(name: str):
+    def profile_block(name: str):
         """Profiles a block of code as a context manager.
 
         This is the recommended and safest way to use the timer, as it
@@ -122,11 +103,26 @@ class ScopeTimer:
             None
         """
 
-        ScopeTimer.begin(name)
-        try:
-            yield
-        finally:
-            ScopeTimer.end(name)
+        if not ScopeTimer._TIMER_ENABLE:
+            return nullcontext()
+
+        return _ProfileContext(name)
+
+    @staticmethod
+    def profile_func(name: Optional[str] = None):
+        """Use this as a `@` decorator."""
+        if not ScopeTimer._TIMER_ENABLE:
+            return lambda f: f
+
+        def decorator(func):
+            scope_name: str = func.__name__ if name is None else name
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                with ScopeTimer.profile_block(scope_name):
+                    return func(*args, **kwargs)
+            return wrapper
+        return decorator
 
     @staticmethod
     def reset():

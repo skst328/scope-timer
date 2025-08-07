@@ -1,0 +1,60 @@
+{# Jinja2 Template: workload.py.j2 #}
+{%- if timer_enabled -%}
+from scope_timer import ScopeTimer
+{% endif -%}
+
+# ───────────────────── Workload definition ─────────────────────
+def core_func(n: int) -> int:
+    return n * (n - 1) // 2
+
+{% if timer_enabled %}
+@ScopeTimer.profile_func()
+{% endif -%}
+def inner_func(n_vec: int) -> int:
+{% if timer_enabled %}
+    with ScopeTimer.profile_block("core_func"):
+        result = core_func(n_vec)
+{% else %}
+    result = core_func(n_vec)
+{% endif %}
+    return result
+
+{% if timer_enabled %}
+@ScopeTimer.profile_func()
+{% endif %}
+def middle_func(
+    n_inner: int,
+    n_vec: int
+) -> int:
+    result: int = 0
+    for _ in range(n_inner):
+        result += inner_func(n_vec)
+    return result
+
+{% if timer_enabled %}
+@ScopeTimer.profile_func()
+{% endif %}
+def outer_func(
+    n_middle: int,
+    n_inner: int,
+    n_vec: int
+) -> int:
+    result: int = 0
+    for _ in range(n_middle):
+        result += middle_func(n_inner, n_vec)
+    return result
+
+def run_once(
+    n_outer: int,
+    n_middle: int,
+    n_inner: int,
+    n_vec: int
+):
+    expected: int = (n_vec * (n_vec - 1) // 2) * n_outer * n_middle * n_inner
+    result: int = 0
+
+    for _ in range(n_outer):
+        result += outer_func(n_middle, n_inner, n_vec)
+
+    assert expected == result, f"'{expected=}', got '{result}'"
+
