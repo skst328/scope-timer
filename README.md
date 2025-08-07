@@ -31,28 +31,28 @@ You can easily profile functions and code blocks. Here is a simple example of a 
 from scope_timer import ScopeTimer
 import time
 
-@ScopeTimer.profile("preprocess")
+@ScopeTimer.profile_func()
 def preprocess():
-    with ScopeTimer.profile("load_data"):
+    with ScopeTimer.profile_block("load_data"):
         time.sleep(0.01)
-    with ScopeTimer.profile("clean_data"):
+    with ScopeTimer.profile_block("clean_data"):
         time.sleep(0.015)
 
-@ScopeTimer.profile("compute")
+@ScopeTimer.profile_func()
 def compute():
     for _ in range(10):
-        with ScopeTimer.profile("matmul"):
+        with ScopeTimer.profile_block("matmul"):
             time.sleep(0.001)
-        with ScopeTimer.profile("activation"):
+        with ScopeTimer.profile_block("activation"):
             time.sleep(0.0005)
 
-@ScopeTimer.profile("postprocess")
+@ScopeTimer.profile_func()
 def postprocess():
-    with ScopeTimer.profile("save_results"):
+    with ScopeTimer.profile_block("save_results"):
         time.sleep(0.005)
 
 # Profile the entire pipeline
-with ScopeTimer.profile("pipeline"):
+with ScopeTimer.profile_block("pipeline"):
     preprocess()
     compute()
     postprocess()
@@ -115,26 +115,19 @@ All methods are static and can be called directly from the `ScopeTimer` class.
 ### Core Profiling Methods
 
 
-* `ScopeTimer.profile(name: str)`
+* `ScopeTimer.profile_block(name: str)`
 
-  The recommended way to profile a block of code. It can be used as a context manager (`with`) or a decorator (`@`). It automatically handles starting and stopping the timer.
+  The recommended way to profile a block of code. It can be used as a context manager (`with`). It automatically handles starting and stopping the timer.
 
   Parameters:
   - `name (str)`: The identifier for the scope.
 
-* `ScopeTimer.begin(name: str)`
+* `ScopeTimer.profile_func(name: str = None)`
 
-  Manually starts a timer scope. This is useful in situations where a context manager or decorator cannot be used. Each `begin()` call must be paired with a corresponding `end()` call.
-
-  Parameters:
-  - `name (str)`: The identifier for the scope to start.
-
-* `ScopeTimer.end(name: str)`
-
-  Manually stops the currently active timer scope.
+  The recommended way to profile a function. It can be used as a decorator (`@`). It automatically handles starting and stopping the timer.
 
   Parameters:
-  - `name (str)`: The identifier for the scope to end. Must match the name of the currently active scope.
+  - `name (str)`: The identifier for the scope. If not provided, the decorated function’s name will be used automatically.
 
 ### Reporting Methods
 
@@ -169,14 +162,6 @@ All methods are static and can be called directly from the `ScopeTimer` class.
 * `ScopeTimer.reset()`
 
   Resets all recorded timer data, clearing all scopes and measurements. Use this to start a fresh set of measurements within the same process.
-
-* `ScopeTimer.enable()`
-
-  Enables the timer globally. If the timer was disabled, this will resume profiling. The timer is enabled by default.
-
-* `ScopeTimer.disable()`
-
-  Disables the timer globally. While disabled, all profiling calls (`profile`, `begin`, `end`) are ignored and have no performance impact.
 
 ## License
 
