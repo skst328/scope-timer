@@ -10,7 +10,7 @@ A lightweight profiler to measure execution time with a rich and colorful hierar
 
 ## Key Features
 
-* **Simple and Intuitive API**: Use decorators (`@ScopeTimer.profile(...)`) or context managers (`with ScopeTimer.profile(...)`) to profile code blocks effortlessly.
+* **Simple and Intuitive API**: Use decorators (`@ScopeTimer.profile_func(...)`) or context managers (`with ScopeTimer.profile_block(...)`) to profile code blocks effortlessly.
 * **Hierarchical Reports**: Understand performance bottlenecks in nested function calls and scopes.
 * **Multiple Outputs**: View reports directly in the console, or save them as plain text or interactive HTML files.
 * **Rich & Colorful**: Powered by the `rich` library for beautiful and readable terminal output.
@@ -71,6 +71,29 @@ The following console output shows a structured report with elapsed time, number
 <p align="center">
   <img src="https://raw.githubusercontent.com/skst328/scope-timer/main/images/screenshot.png" alt="ScopeTimer Console Output" width="400">
 </p>
+
+## Enabling / Disabling the Timer
+
+By default, `scope-timer`` is enabled.
+If you want to completely disable timing (e.g., in production or benchmarking mode), you can set the environment variable `SCOPE_TIMER_ENABLE=0`.
+
+```bash
+export SCOPE_TIMER_ENABLE=0  # disables all timing
+```
+
+This will skip all profiling calls with **near-zero overhead**, making `scope-timer` safe to leave in production code.
+
+> Note:
+> The environment variable must be set before `scope_timer` is imported.
+> This is because the internal switch is initialized at import time.
+
+To disabling in code:
+
+```python
+import os
+os.environ["SCOPE_TIMER_ENABLE"] = "0"
+from scope_timer import ScopeTimer
+```
 
 ## Limitations
 
