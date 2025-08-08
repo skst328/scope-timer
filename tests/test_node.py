@@ -85,9 +85,10 @@ def test_to_tree_with_children():
     tree = root.to_tree(time_prop)
 
     # Render the tree to an in-memory string
-    console = Console(file=StringIO(), force_terminal=True)
+    buffer = StringIO()
+    console = Console(file=buffer, force_terminal=True)
     console.print(tree)
-    output = console.file.getvalue()
+    output = buffer.getvalue()
 
     # Check the final string output
     assert "[root]" in output

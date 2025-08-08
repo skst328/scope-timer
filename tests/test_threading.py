@@ -1,4 +1,3 @@
-import pytest
 import threading
 import time
 from typing import List, Dict
@@ -24,16 +23,16 @@ def worker(
     # A unique root scope for each thread
     root_scope_name = f"thread_{thread_id}_root"
 
-    for i in range(n_loops):
-        with ScopeTimer.profile(root_scope_name):
+    for _ in range(n_loops):
+        with ScopeTimer.profile_block(root_scope_name):
             # First level child scope
-            with ScopeTimer.profile("child_A"):
+            with ScopeTimer.profile_block("child_A"):
                 time.sleep(sleep_interval)
 
             # Second level child scope
-            with ScopeTimer.profile("child_B"):
+            with ScopeTimer.profile_block("child_B"):
                 time.sleep(sleep_interval / 2)
-                with ScopeTimer.profile("grandchild_B1"):
+                with ScopeTimer.profile_block("grandchild_B1"):
                     time.sleep(sleep_interval / 4)
 
     # Use a lock to safely append the thread-local results to the shared list

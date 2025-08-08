@@ -1,5 +1,3 @@
-# tests/test_infer.py
-
 import pytest
 from scope_timer.infer import infer_time_property, _infer_time_unit, _infer_time_precision, _num_digits
 

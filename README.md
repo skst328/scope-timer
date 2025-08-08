@@ -74,7 +74,7 @@ The following console output shows a structured report with elapsed time, number
 
 ## Enabling / Disabling the Timer
 
-By default, `scope-timer`` is enabled.
+By default, `scope-timer` is enabled.
 If you want to completely disable timing (e.g., in production or benchmarking mode), you can set the environment variable `SCOPE_TIMER_ENABLE=0`.
 
 ```bash
@@ -84,7 +84,9 @@ export SCOPE_TIMER_ENABLE=0  # disables all timing
 This will skip all profiling calls with **near-zero overhead**, making `scope-timer` safe to leave in production code.
 
 > Note:
+>
 > The environment variable must be set before `scope_timer` is imported.
+>
 > This is because the internal switch is initialized at import time.
 
 To disabling in code:
