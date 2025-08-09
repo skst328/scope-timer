@@ -188,6 +188,10 @@ All methods are static and can be called directly from the `ScopeTimer` class.
 
   Resets all recorded timer data, clearing all scopes and measurements. Use this to start a fresh set of measurements within the same process.
 
+## Release History
+
+For a detailed history of changes, please see the `CHANGELOG.md` file.
+
 ## License
 
 This project is licensed under the MIT License.
