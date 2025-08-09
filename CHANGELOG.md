@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [0.3.0] - 2025-08-xx
+## [0.3.0] - 2025-08-09
 
 ### Changed
 - Replaced `enable()` / `disable()` methods with environment variable `SCOPE_TIMER_ENABLE`
