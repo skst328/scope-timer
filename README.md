@@ -4,7 +4,7 @@
 
 # scope-timer
 
-A lightweight profiler to measure execution time with a rich and colorful hierarchical report.
+Lightweight scope-based Python profiler with colorful, hierarchical execution-time reports.
 
 `scope-timer` makes it easy to find performance bottlenecks in your Python code by timing specific sections and presenting the results in a beautiful, hierarchical tree. It's designed to be simple to use and have minimal overhead.
 
@@ -142,14 +142,14 @@ All methods are static and can be called directly from the `ScopeTimer` class.
 
 * `ScopeTimer.profile_block(name: str)`
 
-  The recommended way to profile a block of code. It can be used as a context manager (`with`). It automatically handles starting and stopping the timer.
+  Profiles a block of code. It can be used as a context manager (`with`). It automatically handles starting and stopping the timer.
 
   Parameters:
   - `name (str)`: The identifier for the scope.
 
 * `ScopeTimer.profile_func(name: str = None)`
 
-  The recommended way to profile a function. It can be used as a decorator (`@`). It automatically handles starting and stopping the timer.
+  Profiles a function. It can be used as a decorator (`@`). It automatically handles starting and stopping the timer.
 
   Parameters:
   - `name (str)`: The identifier for the scope. If not provided, the decorated function’s name will be used automatically.

@@ -92,15 +92,11 @@ class ScopeTimer:
     def profile_block(name: str):
         """Profiles a block of code as a context manager.
 
-        This is the recommended and safest way to use the timer, as it
-        automatically handles `begin()` and `end()` calls, even if
-        exceptions occur.
+        It can be used as a context manager (`with`) and automatically handles
+        starting and stopping the timer.
 
         Args:
             name (str): The name of the scope to profile.
-
-        Yields:
-            None
         """
 
         if not ScopeTimer._TIMER_ENABLE:
@@ -110,17 +106,33 @@ class ScopeTimer:
 
     @staticmethod
     def profile_func(name: Optional[str] = None):
-        """Use this as a `@` decorator."""
+        """Profiles a function using a decorator.
+
+        It can be used as a decorator (`@`) and automatically handles
+        starting and stopping the timer.
+
+        Args:
+            name (str, optional): The identifier for the scope. If not provided,
+                the decorated function's name will be used automatically.
+        """
+
         if not ScopeTimer._TIMER_ENABLE:
             return lambda f: f
 
         def decorator(func):
-            scope_name: str = func.__name__ if name is None else name
+            scope_name: str
+            if name is not None:
+                scope_name = name
+            else:
+                scope_name = getattr(func, '__name__', 'unknown_scope')
 
             @wraps(func)
             def wrapper(*args, **kwargs):
-                with ScopeTimer.profile_block(scope_name):
+                ScopeTimer._begin(scope_name)
+                try:
                     return func(*args, **kwargs)
+                finally:
+                    ScopeTimer._end(scope_name)
             return wrapper
         return decorator
 

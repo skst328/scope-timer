@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "scope-timer"
 dynamic = ["version"]
-description = "A lightweight profiler to measure execution time with a rich and colorful hierarchical report."
+description = "Lightweight scope-based Python profiler with colorful, hierarchical execution time reports."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { text = "MIT License" }
